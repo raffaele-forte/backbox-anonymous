@@ -21,17 +21,20 @@ TOR_UID="debian-tor"
 TRANS_PORT="9040"
 
 # List, separated by spaces, of process names that should be killed
-TO_KILL=""
+TO_KILL="chrome dropbox firefox pidgin skype thunderbird xchat"
 
 # List, separated by spaces, of BleachBit cleaners
-BLEACHBIT_CLEANERS=""
+BLEACHBIT_CLEANERS="bash.history system.cache system.clipboard system.custom system.recent_documents system.rotated_logs system.tmp system.trash"
+
+# Overwrite files to hide contents
+OVERWRITE="true"
 
 # The default local hostname
-REAL_HOSTNAME=""
+REAL_HOSTNAME="backbox"
 
 # Include default options, if any
-if [ -f /etc/default/anonymous ] ; then
-	. /etc/default/anonymous
+if [ -f /etc/default/backbox-anonymous ] ; then
+	. /etc/default/backbox-anonymous
 fi
 
 # General-purpose Yes/No prompt function
@@ -107,10 +110,12 @@ change_hostname() {
 	echo -n " * Service "
 	service hostname start 2>/dev/null || echo "hostname already started"
 
-	su $SUDO_USER -c "xauth list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
-	su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
+	if [ -f "$HOME/.Xauthority" ] ; then
+		su $SUDO_USER -c "xauth list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
+		su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
+		echo " * X authority file updated"
+	fi
 
-	echo " * X authority file updated"
 	echo " * Hostname changed to $NEW_HOSTNAME"
 }
 
@@ -223,7 +228,14 @@ redirect_to_tor() {
 
 # BleachBit cleaners deletes unnecessary files to preserve privacy
 do_bleachbit() {
-	echo -n "\n * Deleting unnecessary files from the system... "
+	if [ "$OVERWRITE" = "true" ] ; then
+		echo -n "\n * Deleting and overwriting unnecessary files... "
+		bleachbit -o -c $BLEACHBIT_CLEANERS >/dev/null
+	else
+		echo -n "\n * Deleting unnecessary files... "
+		bleachbit -c $BLEACHBIT_CLEANERS >/dev/null
+	fi
+
 	bleachbit -o -c $BLEACHBIT_CLEANERS >/dev/null
 	echo "Done!"
 }
@@ -314,7 +326,7 @@ do_stop() {
 	echo
 }
 
-do_checktor() {
+do_status() {
 	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
 	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
@@ -335,11 +347,11 @@ case "$1" in
 	stop)
 		do_stop
 	;;
-	checktor)
-		do_checktor
+	status)
+		do_status
 	;;
 	*)
-		echo "Usage: $0 {start|stop|checktor}" >&2
+		echo "Usage: $0 {start|stop|status}" >&2
 		exit 3
 	;;
 esac
