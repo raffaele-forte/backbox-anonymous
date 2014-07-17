@@ -115,6 +115,8 @@ change_hostname() {
 		su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
 		echo " * X authority file updated"
 	fi
+	
+	avahi-daemon --kill
 
 	echo " * Hostname changed to $NEW_HOSTNAME"
 }
