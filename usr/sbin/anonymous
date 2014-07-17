@@ -100,7 +100,7 @@ change_hostname() {
 
 	clean_dhcp
 
-	RANDOM_HOSTNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
+	RANDOM_HOSTNAME=$(shuf -n 1 /etc/dictionaries-common/words | sed -r 's/[^a-zA-Z]//g' | awk '{print tolower($0)}')
 
 	NEW_HOSTNAME=${1:-$RANDOM_HOSTNAME}
 
