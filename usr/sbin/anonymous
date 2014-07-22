@@ -37,6 +37,15 @@ if [ -f /etc/default/backbox-anonymous ] ; then
 	. /etc/default/backbox-anonymous
 fi
 
+warning() {
+	echo "\n[!] It's a simple script that avoid the most common system data leaks."
+	echo "    Your coumputer behaviour is the key to guarantee you a strong privacy "
+	echo "    protection and a good anonimate."
+	
+	echo "\n[i] Please edit /etc/default/backbox-anonymous with your custom values."
+}
+
+
 # General-purpose Yes/No prompt function
 ask() {
 	while true; do
@@ -245,6 +254,8 @@ do_bleachbit() {
 do_start() {
 	check_configs
 	check_root
+	
+	warning
 
 	echo "\n[i] Starting anonymous mode\n"
 
@@ -258,7 +269,7 @@ do_start() {
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
-		read -p "Make your choice [random] > " CHOICE
+		read -p "Type it or press Enter for a random one > " CHOICE
 
 		if [ "$CHOICE" = "" ]; then
 			change_hostname
@@ -306,7 +317,7 @@ do_stop() {
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
-		read -p "Make your choice [$REAL_HOSTNAME] > " CHOICE
+		read -p "Type it or press Enter to restore default [$REAL_HOSTNAME] > " CHOICE
 
 		if [ "$CHOICE" = "" ]; then
 			change_hostname $REAL_HOSTNAME
