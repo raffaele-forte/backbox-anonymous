@@ -38,13 +38,12 @@ if [ -f /etc/default/backbox-anonymous ] ; then
 fi
 
 warning() {
-	echo "\n[!] It's a simple script that avoid the most common system data leaks."
-	echo "    Your coumputer behaviour is the key to guarantee you a strong privacy "
-	echo "    protection and a good anonimate."
+	echo "\n[!] WARNING! It's a simple script that avoid the most common system data"
+	echo "    leaks. Your coumputer behaviour is the key to guarantee you a strong"
+	echo "    privacy protection and a good anonimate."
 	
 	echo "\n[i] Please edit /etc/default/backbox-anonymous with your custom values."
 }
-
 
 # General-purpose Yes/No prompt function
 ask() {
@@ -340,16 +339,26 @@ do_stop() {
 }
 
 do_status() {
+
+	echo "\n[i] Showing anonymous status\n"
+
+	ifconfig -a | grep "encap:Ethernet" | awk '{print " * " $1, $5}'
+
+	CURRENT_HOSTNAME=$(hostname)
+	echo " * Hostname $CURRENT_HOSTNAME"
+	
 	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
 	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
 	echo $HTML | grep -q "Congratulations. This browser is configured to use Tor."
 
 	if [ $? -ne 0 ]; then
-		echo "\n[!] Sorry. You are not using Tor.\n"
+		echo " * IP $IP"
+		echo " * Tor OFF\n"
 		exit 3
 	else
-		echo "\n[i] Congratulations. This system is configured to use Tor: $IP\n"
+		echo " * IP $IP"
+		echo " * Tor ON\n"
 	fi
 }
 
