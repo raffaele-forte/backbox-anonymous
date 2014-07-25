@@ -291,7 +291,7 @@ do_start_interactive() {
 	echo
 }
 
-do_stop() {
+do_stop_interactive() {
 
 	check_root
 
@@ -341,6 +341,53 @@ do_stop() {
 	echo
 }
 
+do_parsing() {
+	while getopts 'h:m:t' OPTION; do 
+		case "$OPTION" in
+			h)	HOSTNAME=$OPTARG;;
+			m)	INTERFACE=$OPTARG;;
+			t)	TOR="yes";;
+			*)	echo "Usage: $0 start|stop [-d hostname] [-m interface] [-t]" >&2
+				exit 3
+			;;
+		esac 
+	done
+}
+
+do_stop() {
+	do_parsing $@
+	check_root
+
+	echo "\n[i] Stopping anonymous mode\n"
+
+	echo -n " * Service "
+	service network-manager stop 2>/dev/null || echo " network-manager already stopped"
+
+	kill_process $TO_KILL
+
+	if [ -n "$TOR" ]; then
+		iptables_flush
+
+		if [ -f /etc/network/iptables.rules ]; then
+			iptables-restore < /etc/network/iptables.rules
+			rm /etc/network/iptables.rules
+			echo " * Restored iptables rules"
+		fi
+
+		echo -n " * Service "
+		service resolvconf start 2>/dev/null || echo "resolvconf already started"
+		service tor restart
+	fi
+
+	[ -n "$INTERFACE" ] && reset_mac $INTERFACE
+	
+	[ -n "$HOSTNAME" ] && change_hostname $HOSTNAME
+	
+	echo -n " * Service "
+	service network-manager start 2>/dev/null || echo "network-manager already started"
+	echo
+}
+
 do_status() {
 
 	echo "\n[i] Showing anonymous status\n"
@@ -366,23 +413,7 @@ do_status() {
 }
 
 do_start() {
-	while getopts 'h:m:ct' OPTION; do 
-		case "$OPTION" in
-			c)	CLEAN="yes";;
-			h)	HOSTNAME=$OPTARG;;
-			m)	MAC=$OPTARG;;
-			t)	TOR="yes";;
-			*)	echo "Usage: $0 start [-c] [-d hostname] [-m address] [-t start|stop]" >&2
-				exit 3
-			;;
-		esac 
-	done		
-
-#	[ -n "$CLEAN" ] && echo "CLEAN=$CLEAN"
-#	[ -n "$HOSTNAME" ] && echo "HOSTNAME=$HOSTNAME"
-#	[ -n "$MAC" ] && echo "MAC=$MAC"
-#	[ -n "$TOR" ] && echo "TOR=$TOR"
-
+	do_parsing $@
 	check_configs
 	check_root
 
@@ -391,7 +422,7 @@ do_start() {
 
 	kill_process $TO_KILL
 	
-	[ -n "$MAC" ] && set_mac $MAC
+	[ -n "$INTERFACE" ] && set_mac $INTERFACE
 	
 	[ -n "$HOSTNAME" ] && change_hostname $HOSTNAME
 	
@@ -405,15 +436,18 @@ do_start() {
 
 case "$1" in
 	start)
-		if [ $# -eq 1 ]; then
+		if [ $# -eq 1 ]; then 
 			do_start_interactive
 		else
-			shift
-			do_start $@
+			shift; do_start $@		
 		fi
 	;;
 	stop)
-		do_stop
+		if [ $# -eq 1 ]; then 
+			do_stop_interactive
+		else
+			shift; do_stop $@		
+		fi
 	;;
 	status)
 		do_status
