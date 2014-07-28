@@ -146,7 +146,6 @@ get_interface(){
 }
 
 set_mac() {
-	echo "interface=$1"
 	NEW_MAC=$(macchanger -A $1 | tail -n 1)
 	echo "\n * $NEW_MAC"
 }
