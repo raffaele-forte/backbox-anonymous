@@ -346,7 +346,7 @@ do_parsing() {
 			h)	HOSTNAME=$OPTARG;;
 			m)	INTERFACE=$OPTARG;;
 			t)	TOR="yes";;
-			*)	echo "Usage: $0 start|stop [-d hostname] [-m interface] [-t]" >&2
+			*)	echo "Usage: $0 start|stop [-h hostname] [-m interface] [-t]" >&2
 				exit 3
 			;;
 		esac 
