@@ -99,6 +99,11 @@ clean_dhcp() {
 	echo " * DHCP address released"
 }
 
+# Get a random hostname
+random_hostname() {
+    echo $(shuf -n 1 /etc/dictionaries-common/words | sed -r 's/[^a-zA-Z]//g' | awk '{print tolower($0)}')
+}
+
 # Change the local hostname
 change_hostname() {
 	
@@ -108,7 +113,7 @@ change_hostname() {
 
 	clean_dhcp
 
-	RANDOM_HOSTNAME=$(shuf -n 1 /etc/dictionaries-common/words | sed -r 's/[^a-zA-Z]//g' | awk '{print tolower($0)}')
+	RANDOM_HOSTNAME=$(random_hostname)
 
 	NEW_HOSTNAME=${1:-$RANDOM_HOSTNAME}
 
@@ -341,12 +346,19 @@ do_stop_interactive() {
 }
 
 do_parsing() {
-	while getopts 'h:m:t' OPTION; do 
+	while getopts 'h:m:tr' OPTION; do 
 		case "$OPTION" in
 			h)	HOSTNAME=$OPTARG;;
 			m)	INTERFACE=$OPTARG;;
 			t)	TOR="yes";;
-			*)	echo "Usage: $0 start|stop [-h hostname] [-m interface] [-t]" >&2
+			r)      HOSTNAME=$(random_hostname);;
+			*)	echo "Usage: $0 start|stop [-h hostname] [-m interface] [-t] [-r]" >&2
+                                echo "\tstart|stop -h <hostname>     Set the hostname to the given <hostname> value"
+                                echo "\tstart|stop -r                Randomize the hostname by using a local word dictionary"
+                                echo "\tstart -m <interface>         Randomize the <interface> MAC address"
+                                echo "\tstop -m <interface>          Reset the <interface> MAC address to the original one"                                
+                                echo "\tstart -t                     Start Tor routing"
+                                echo "\tstop -t                      Stop Tor routing"                                
 				exit 3
 			;;
 		esac 
