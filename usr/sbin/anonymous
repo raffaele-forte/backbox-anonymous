@@ -262,7 +262,7 @@ do_start() {
 
 	kill_process
 	
-	if [ $(virt-what) != "" ]; then
+	if [ "$(virt-what)" != "" ]; then
 		echo " * Unable to change MAC address in a Virtual Machine"
 	else
 		if ask "Do you want to change the MAC address?" Y; then
@@ -314,7 +314,7 @@ do_stop() {
 
 	kill_process
 	
-	if [ $(virt-what) != "" ]; then
+	if [ "$(virt-what)" != "" ]; then
 		echo " * Unable to change MAC address in a Virtual Machine"
 	else
 		if ask "Do you want to change the MAC address?" Y; then
