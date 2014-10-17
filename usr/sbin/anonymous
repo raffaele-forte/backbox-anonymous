@@ -8,7 +8,7 @@
 # changing MAC address and IP information and so on.
 #
 # Author: Raffaele Forte <raffaele@backbox.org>
-# Version: 1.0
+# Version: 1.1
 
 # List, separated by spaces, of destinations that you do not want to be
 # routed through Tor
@@ -233,7 +233,6 @@ redirect_to_tor() {
 
 	iptables -A OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT
 	iptables -A OUTPUT -j REJECT
-
 }
 
 # BleachBit cleaners deletes unnecessary files to preserve privacy
@@ -263,8 +262,12 @@ do_start() {
 
 	kill_process
 	
-	if ask "Do you want to change the MAC address?" Y; then
-		change_mac
+	if [ $(virt-what) != "" ]; then
+		echo " * Unable to change MAC address in a Virtual Machine"
+	else
+		if ask "Do you want to change the MAC address?" Y; then
+			change_mac
+		fi
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
@@ -310,9 +313,13 @@ do_stop() {
 	service resolvconf start 2>/dev/null || echo "resolvconf already started"
 
 	kill_process
-
-	if ask "Do you want to change the MAC address?" Y; then
-		change_mac permanent
+	
+	if [ $(virt-what) != "" ]; then
+		echo " * Unable to change MAC address in a Virtual Machine"
+	else
+		if ask "Do you want to change the MAC address?" Y; then
+			change_mac permanent
+		fi
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
