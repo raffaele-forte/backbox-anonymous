@@ -8,7 +8,7 @@
 # changing MAC address and IP information and so on.
 #
 # Author: Raffaele Forte <raffaele@backbox.org>
-# Version: 1.0
+# Version: 1.2
 
 # List, separated by spaces, of destinations that you do not want to be
 # routed through Tor
@@ -43,6 +43,21 @@ warning() {
 	echo "    privacy protection and a good anonimate."
 	
 	echo "\n[i] Please edit /etc/default/backbox-anonymous with your custom values."
+}
+
+usage(){
+	echo "" >&2
+	echo "=====INTERACTIVE MODE=====" >&2
+	echo "\t $0\t\t start | stop | status" >&2
+	echo "" >&2
+	echo "=====MANUAL MODE=====" >&2
+	echo "\t $0\t\t start [-m <interface>] [-t] | stop [-m <interface>] [-t] | -n [hostname]" >&2
+    echo "\t start -m <interface>    Randomize the <interface> MAC address" >&2
+    echo "\t start -t                Start Tor routing" >&2
+    echo "\t stop -m <interface>     Reset the <interface> MAC address to the original one" >&2
+    echo "\t stop -t                 Stop Tor routing" >&2
+	echo "\t -n [hostname]           Set the hostname to the given value or randomize it if no value is provided" >&2
+	echo "" >&2
 }
 
 # General-purpose Yes/No prompt function
@@ -86,8 +101,8 @@ check_root() {
 
 # Kill processes at startup
 kill_process() {
-	if [ $1 != "" ]; then
-		killall -q $1
+	if [ "$TO_KILL" != "" ]; then
+		killall -q $TO_KILL
 		echo " * Killed processes to prevent leaks"
 	fi
 }
@@ -135,8 +150,10 @@ change_hostname() {
 }
 
 # Change the MAC address for network interfaces
-get_interface(){
-	local VAR=0	
+get_interface() {
+
+	local VAR=0
+
 	while [ $VAR -eq 0 ]; do
 		echo -n "Select network interfaces ["
 		echo -n $(ifconfig -a | grep Ethernet | awk '{print $1}')
@@ -238,7 +255,6 @@ redirect_to_tor() {
 
 	iptables -A OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT
 	iptables -A OUTPUT -j REJECT
-
 }
 
 # BleachBit cleaners deletes unnecessary files to preserve privacy
@@ -266,11 +282,15 @@ do_start_interactive() {
 	echo -n " * Service "
 	service network-manager stop 2>/dev/null || echo " network-manager already stopped"
 
-	kill_process $TO_KILL
+	kill_process
 	
-	if ask "Do you want to change the MAC address?" Y; then
-		get_interface
-		set_mac $IFACE
+	if [ "$(virt-what)" != "" ]; then
+		echo " * Unable to change MAC address in a Virtual Machine"
+	else
+		if ask "Do you want to change the MAC address?" Y; then
+			get_interface
+			set_mac $IFACE
+		fi
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
@@ -315,11 +335,15 @@ do_stop_interactive() {
 	echo -n " * Service "
 	service resolvconf start 2>/dev/null || echo "resolvconf already started"
 
-	kill_process $TO_KILL
-
-	if ask "Do you want to change the MAC address?" Y; then
-		get_interface
-		reset_mac $IFACE
+	kill_process
+	
+	if [ "$(virt-what)" != "" ]; then
+		echo " * Unable to change MAC address in a Virtual Machine"
+	else
+		if ask "Do you want to change the MAC address?" Y; then
+			get_interface
+			reset_mac $IFACE
+		fi
 	fi
 	
 	if ask "Do you want to change the local hostname?" Y; then
@@ -351,14 +375,8 @@ do_parsing() {
 			h)	HOSTNAME=$OPTARG;;
 			m)	INTERFACE=$OPTARG;;
 			t)	TOR="yes";;
-			r)      HOSTNAME=$(random_hostname);;
-			*)	echo "Usage: $0 start|stop [-h hostname] [-m interface] [-t] [-r]" >&2
-                                echo "\tstart|stop -h <hostname>     Set the hostname to the given <hostname> value"
-                                echo "\tstart|stop -r                Randomize the hostname by using a local word dictionary"
-                                echo "\tstart -m <interface>         Randomize the <interface> MAC address"
-                                echo "\tstop -m <interface>          Reset the <interface> MAC address to the original one"                                
-                                echo "\tstart -t                     Start Tor routing"
-                                echo "\tstop -t                      Stop Tor routing"                                
+			r)	HOSTNAME=$(random_hostname);;
+			*)	usage                     
 				exit 3
 			;;
 		esac 
@@ -463,8 +481,15 @@ case "$1" in
 	status)
 		do_status
 	;;
+	-n)
+		if [ $# -eq 1 ]; then 
+			change_hostname
+		else
+			shift; change_hostname $@
+		fi
+	;;
 	*)
-		echo "Usage: $0 {start|stop|status}" >&2
+		usage
 		exit 3
 	;;
 esac
