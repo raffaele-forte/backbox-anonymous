@@ -139,7 +139,7 @@ change_hostname() {
 	service hostname start 2>/dev/null || echo "hostname already started"
 
 	if [ -f "$HOME/.Xauthority" ] ; then
-		su $SUDO_USER -c "xauth list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
+		su $SUDO_USER -c "xauth -n list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
 		su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
 		echo " * X authority file updated"
 	fi
