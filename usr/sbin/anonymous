@@ -119,7 +119,7 @@ change_hostname() {
 	service hostname start 2>/dev/null || echo "hostname already started"
 
 	if [ -f "$HOME/.Xauthority" ] ; then
-		su $SUDO_USER -c "xauth -n list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
+		su $SUDO_USER -c "xauth list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
 		su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
 		echo " * X authority file updated"
 	fi
@@ -369,6 +369,54 @@ do_status() {
 	fi
 }
 
+do_newip() {
+
+	echo "\n[i] Change Anonymous IP\n"
+	
+	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
+	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+
+	echo $HTML | grep -q "Congratulations. This browser is configured to use Tor."
+
+	if [ $? -ne 0 ]; then
+		echo " * Your Real IP: $IP"
+		echo " * Anonymous script is not active, start Anonymous Script to change Anonymous IP!\n"
+		exit 3
+	else
+		echo " * Current Anonymous IP: $IP"
+		echo " * Tor ON"
+	fi
+		
+	ifconfig -a | grep "encap:Ethernet" | awk '{print " * " $1, $5}'
+
+	CURRENT_HOSTNAME=$(hostname)
+	echo " * Current Hostname: $CURRENT_HOSTNAME\n"
+	
+	pidof tor | xargs sudo kill -HUP
+	
+	
+	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
+	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+	
+	echo $HTML | grep -q "Congratulations. This browser is configured to use Tor."
+	
+	if [ $? -ne 0 ]; then
+		echo " * Your Real IP: $IP"
+		echo " * Tor OFF\n"
+		exit 3
+	else
+		echo " * New Anonymous IP: $IP"
+		echo " * Tor ON"
+	fi
+	
+	ifconfig -a | grep "encap:Ethernet" | awk '{print " * " $1, $5}'
+	
+	CURRENT_HOSTNAME=$(hostname)
+	echo " * Hostname $CURRENT_HOSTNAME\n"
+	
+}
+
+
 case "$1" in
 	start)
 		do_start
@@ -379,8 +427,12 @@ case "$1" in
 	status)
 		do_status
 	;;
+
+	newip)
+		do_newip
+	;;
 	*)
-		echo "Usage: $0 {start|stop|status}" >&2
+		echo "Usage: $0 {start|stop|status|newip}" >&2
 		exit 3
 	;;
 esac
