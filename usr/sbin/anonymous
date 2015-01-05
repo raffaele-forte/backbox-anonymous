@@ -392,8 +392,7 @@ do_newip() {
 	CURRENT_HOSTNAME=$(hostname)
 	echo " * Current Hostname: $CURRENT_HOSTNAME\n"
 	
-	pidof tor | xargs sudo kill -HUP
-	
+	sudo service tor restart
 	
 	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
 	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
@@ -401,11 +400,11 @@ do_newip() {
 	echo $HTML | grep -q "Congratulations. This browser is configured to use Tor."
 	
 	if [ $? -ne 0 ]; then
-		echo " * Your Real IP: $IP"
+		echo "\n * Your Real IP: $IP"
 		echo " * Tor OFF\n"
 		exit 3
 	else
-		echo " * New Anonymous IP: $IP"
+		echo "\n * New Anonymous IP: $IP"
 		echo " * Tor ON"
 	fi
 	
