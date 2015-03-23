@@ -8,7 +8,7 @@
 # changing MAC address and IP information and so on.
 #
 # Author: Raffaele Forte <raffaele@backbox.org>
-# Version: 1.1
+# Version: 1.2
 
 # List, separated by spaces, of destinations that you do not want to be
 # routed through Tor
@@ -120,7 +120,7 @@ change_hostname() {
 
 	if [ -f "$HOME/.Xauthority" ] ; then
 		su $SUDO_USER -c "xauth -n list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
-		su $SUDO_USER -c "xauth add $(xauth list | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
+		su $SUDO_USER -c "xauth add $(xauth -n list | tail -1 | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
 		echo " * X authority file updated"
 	fi
 	
@@ -338,8 +338,10 @@ do_stop() {
 	service network-manager start 2>/dev/null || echo "network-manager already started"
 	service tor restart
 
-	if ask "Delete unnecessary files to preserve your privacy?" Y; then
-		do_bleachbit
+	if [ "$DISPLAY" ]; then
+		if ask "Delete unnecessary files to preserve your privacy?" Y; then
+			do_bleachbit
+		fi
 	fi
 
 	echo
