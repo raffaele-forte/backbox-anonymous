@@ -78,7 +78,7 @@ ask() {
 
 # Make sure that only root can run this script
 check_root() {
-	if [ $(id -u) -ne 0 ]; then
+	if [ "$(id -u)" -ne 0 ]; then
 		echo "\n[!] This script must run as root\n" >&2
 		exit 1
 	fi
@@ -87,7 +87,7 @@ check_root() {
 # Kill processes at startup
 kill_process() {
 	if [ "$TO_KILL" != "" ]; then
-		killall -q $TO_KILL
+		killall -q "$TO_KILL"
 		echo " * Killed processes to prevent leaks"
 	fi
 }
@@ -112,15 +112,15 @@ change_hostname() {
 
 	NEW_HOSTNAME=${1:-$RANDOM_HOSTNAME}
 
-	echo $NEW_HOSTNAME > /etc/hostname
-	sed -i 's/127.0.1.1.*/127.0.1.1\t'$NEW_HOSTNAME'/g' /etc/hosts
+	echo "$NEW_HOSTNAME" > /etc/hostname
+	sed -i 's/127.0.1.1.*/127.0.1.1\t'"$NEW_HOSTNAME"'/g' /etc/hosts
 
 	echo -n " * Service "
 	service hostname start 2>/dev/null || echo "hostname already started"
 
 	if [ -f "$HOME/.Xauthority" ] ; then
-		su $SUDO_USER -c "xauth -n list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
-		su $SUDO_USER -c "xauth add $(xauth -n list | tail -1 | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
+		su "$SUDO_USER" -c "xauth -n list | grep -v $CURRENT_HOSTNAME | cut -f1 -d\ | xargs -i xauth remove {}"
+		su "$SUDO_USER" -c "xauth add $(xauth -n list | tail -1 | sed 's/^.*\//'$NEW_HOSTNAME'\//g')"
 		echo " * X authority file updated"
 	fi
 	
@@ -136,7 +136,7 @@ change_mac() {
 	
 	while [ $VAR -eq 0 ]; do
 		echo -n "Select network interfaces ["
-		echo -n $(ifconfig -a | grep Ethernet | awk '{print $1}')
+		echo -n "$(ifconfig -a | grep Ethernet | awk '{print $1}')"
 		read -p "] > " IFACE
 		
 		ifconfig -a | grep Ethernet | awk '{print $1}' | grep -q -x "$IFACE"
@@ -147,10 +147,10 @@ change_mac() {
 	done
 
 	if [ "$1" = "permanent" ]; then
-		NEW_MAC=$(macchanger -p $IFACE | tail -n 1 | sed 's/  //g')
+		NEW_MAC=$(macchanger -p "$IFACE" | tail -n 1 | sed 's/  //g')
 		echo "\n * $NEW_MAC"
 	else
-		NEW_MAC=$(macchanger -A $IFACE | tail -n 1 | sed 's/  //g')
+		NEW_MAC=$(macchanger -A "$IFACE" | tail -n 1 | sed 's/  //g')
 		echo "\n * $NEW_MAC"
 	fi
 }
@@ -221,14 +221,14 @@ redirect_to_tor() {
 	iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
 
 	for NET in $NON_TOR 127.0.0.0/9 127.128.0.0/10; do
-		iptables -t nat -A OUTPUT -d $NET -j RETURN
+		iptables -t nat -A OUTPUT -d "$NET" -j RETURN
 	done
 
 	iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $TRANS_PORT
 	iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 	for NET in $NON_TOR 127.0.0.0/8; do
-		iptables -A OUTPUT -d $NET -j ACCEPT
+		iptables -A OUTPUT -d "$NET" -j ACCEPT
 	done
 
 	iptables -A OUTPUT -m owner --uid-owner $TOR_UID -j ACCEPT
@@ -239,10 +239,10 @@ redirect_to_tor() {
 do_bleachbit() {
 	if [ "$OVERWRITE" = "true" ] ; then
 		echo -n "\n * Deleting and overwriting unnecessary files... "
-		bleachbit -o -c $BLEACHBIT_CLEANERS >/dev/null
+		bleachbit -o -c "$BLEACHBIT_CLEANERS" >/dev/null
 	else
 		echo -n "\n * Deleting unnecessary files... "
-		bleachbit -c $BLEACHBIT_CLEANERS >/dev/null
+		bleachbit -c "$BLEACHBIT_CLEANERS" >/dev/null
 	fi
 
 	echo "Done!"
@@ -275,7 +275,7 @@ do_start() {
 		if [ "$CHOICE" = "" ]; then
 			change_hostname
 		else
-			change_hostname $CHOICE
+			change_hostname "$CHOICE"
 		fi
 	fi
 
@@ -327,7 +327,7 @@ do_stop() {
 		if [ "$CHOICE" = "" ]; then
 			change_hostname $REAL_HOSTNAME
 		else
-			change_hostname $CHOICE
+			change_hostname "$CHOICE"
 		fi
 	else
 		echo
@@ -356,9 +356,9 @@ do_status() {
 	echo " * Hostname $CURRENT_HOSTNAME"
 	
 	HTML=$(curl -s https://check.torproject.org/?lang=en_US)
-	IP=$(echo $HTML | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+	IP=$(echo "$HTML" | egrep -m1 -o '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
-	echo $HTML | grep -q "Congratulations. This browser is configured to use Tor."
+	echo "$HTML" | grep -q "Congratulations. This browser is configured to use Tor."
 
 	if [ $? -ne 0 ]; then
 		echo " * IP $IP"
