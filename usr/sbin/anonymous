@@ -8,7 +8,7 @@
 # changing MAC address and IP information and so on.
 #
 # Author: Raffaele Forte <raffaele@backbox.org>
-# Version: 1.3
+# Version: 1.4
 
 # List, separated by spaces, of destinations that you do not want to be
 # routed through Tor
@@ -87,7 +87,7 @@ check_root() {
 # Kill processes at startup
 kill_process() {
 	if [ "$TO_KILL" != "" ]; then
-		killall -q "$TO_KILL"
+		killall -q $TO_KILL
 		echo " * Killed processes to prevent leaks"
 	fi
 }
@@ -136,7 +136,7 @@ change_mac() {
 	
 	while [ $VAR -eq 0 ]; do
 		echo -n "Select network interfaces ["
-		echo -n "$(ifconfig -a | grep Ethernet | awk '{print $1}')"
+		echo -n $(ifconfig -a | grep Ethernet | awk '{print $1}')
 		read -p "] > " IFACE
 		
 		ifconfig -a | grep Ethernet | awk '{print $1}' | grep -q -x "$IFACE"
@@ -239,10 +239,10 @@ redirect_to_tor() {
 do_bleachbit() {
 	if [ "$OVERWRITE" = "true" ] ; then
 		echo -n "\n * Deleting and overwriting unnecessary files... "
-		bleachbit -o -c "$BLEACHBIT_CLEANERS" >/dev/null
+		bleachbit -o -c $BLEACHBIT_CLEANERS >/dev/null
 	else
 		echo -n "\n * Deleting unnecessary files... "
-		bleachbit -c "$BLEACHBIT_CLEANERS" >/dev/null
+		bleachbit -c $BLEACHBIT_CLEANERS >/dev/null
 	fi
 
 	echo "Done!"
