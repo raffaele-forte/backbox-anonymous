@@ -21,7 +21,7 @@ TOR_UID="debian-tor"
 TRANS_PORT="9040"
 
 # List, separated by spaces, of process names that should be killed
-TO_KILL="chrome dropbox firefox pidgin skype thunderbird xchat"
+TO_KILL="chrome dropbox firefox pidgin skype thunderbird xchat hexchat"
 
 # List, separated by spaces, of BleachBit cleaners
 BLEACHBIT_CLEANERS="bash.history system.cache system.clipboard system.custom system.recent_documents system.rotated_logs system.tmp system.trash"
