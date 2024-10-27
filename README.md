@@ -1,9 +1,12 @@
 backbox-anonymous
 =================
 
-BackBox Script for Anonymous Internet Navigation
+BackBox Script for Enhanced Anonymity and Privacy
 
-This script is intended to set up your BackBox machine to guarantee
-anonymity through Tor. Additionally, the script takes further steps to
-guarantee prevantion of data leakage by killing dangerous processes,
-changing MAC address and IP information and so on.
+This script configures your BackBox Linux machine to maximize online anonymity
+and privacy using the Tor network. It implements various measures to
+prevent data leaks, such as terminating potentially risky processes,
+changing the MAC address, and updating IP configurations.
+
+Note: Always review the script and ensure you understand its functionality
+before execution. Use it responsibly and adhere to local laws and regulations.
