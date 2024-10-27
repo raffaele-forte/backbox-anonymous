@@ -1,24 +1,24 @@
 # Defaults for BackBox Anonymous script
 # sourced by /usr/sbin/anonymous
 
-# List, separated by spaces, of destinations that you do not want to be
-# routed through Tor
-NON_TOR="192.168.0.0/16 172.16.0.0/12"
-
-# The UID as which Tor runs
+# The UID under which Tor runs
 TOR_UID="debian-tor"
 
-# Tor TransPort
+# Tor ports
 TRANS_PORT="9040"
+DNS_PORT="9053"
+VIRT_ADDR="10.192.0.0/10"
 
-# List, separated by spaces, of process names that should be killed
-TO_KILL="chrome dropbox firefox pidgin skype thunderbird xchat"
+# Non-Tor destinations
+NON_TOR="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
+RESV_IANA="0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/3"
 
-# List, separated by spaces, of BleachBit cleaners
+# Processes to kill
+TO_KILL="chrome dropbox firefox pidgin skype thunderbird hexchat"
+
+# BleachBit cleaners
 BLEACHBIT_CLEANERS="bash.history system.cache system.clipboard system.custom system.recent_documents system.rotated_logs system.tmp system.trash"
-
-# Overwrite files to hide contents
 OVERWRITE="true"
 
-# The default local hostname
+# Default hostname
 REAL_HOSTNAME="backbox"
